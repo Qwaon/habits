@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Reading</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            padding-top: 60px;
+            padding-bottom: 100px;
+        }
+        
+        .date {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+        }
+        
+        .title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 40px;
+        }
+        
+        .habit {
+            background: #111;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        
+        .habit:active {
+            background: #1a1a1a;
+        }
+        
+        .habit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .habit-name {
+            font-size: 17px;
+            font-weight: 500;
+        }
+        
+        .check {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            transition: all 0.2s;
+        }
+        
+        .check.active {
+            background: #0a84ff;
+            border-color: #0a84ff;
+        }
+        
+        .check.active::after {
+            content: '✓';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        
+        .dots {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        
+        .dot {
+            width: 6px;
+            height: 6px;
+            background: #222;
+            border-radius: 50%;
+        }
+        
+        .dot.filled {
+            background: #0a84ff;
+        }
+        
+        .dot.negative {
+            background: #333;
+        }
+        
+        .dot.negative.filled {
+            background: #ff453a;
+        }
+        
+        .stats {
+            margin-top: 40px;
+            padding: 20px;
+            background: #111;
+            border-radius: 16px;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            font-size: 15px;
+        }
+        
+        .stat-label {
+            color: #666;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+        }
+        
+        .year-view {
+            margin-top: 40px;
+        }
+        
+        .year-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .months {
+            display: grid;
+            gap: 16px;
+        }
+        
+        .month {
+            background: #111;
+            border-radius: 12px;
+            padding: 16px;
+        }
+        
+        .month-name {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+        }
+        
+        .day-cell {
+            aspect-ratio: 1;
+            border-radius: 3px;
+            background: #1a1a1a;
+            cursor: pointer;
+        }
+        
+        .day-cell.selected {
+            outline: 2px solid #fff;
+            outline-offset: -2px;
+        }
+        
+        .day-cell.reading {
+            background: #0a84ff;
+        }
+        
+        .day-cell.doom {
+            background: #ff453a;
+        }
+        
+        .day-cell.both {
+            background: linear-gradient(135deg, #0a84ff 50%, #ff453a 50%);
+        }
+    </style>
+</head>
+<body>
+    <div class="date" id="today" onclick="resetToToday()"></div>
+    <div class="title" id="page-title">Сегодня</div>
+    
+    <div class="habit" onclick="toggle('reading')">
+        <div class="habit-header">
+            <div class="habit-name">Чтение</div>
+            <div class="check" id="reading-check"></div>
+        </div>
+        <div class="dots" id="reading-dots"></div>
+    </div>
+    
+    <div class="habit" onclick="toggle('doom')">
+        <div class="habit-header">
+            <div class="habit-name">Думскроллинг</div>
+            <div class="check negative" id="doom-check"></div>
+        </div>
+        <div class="dots" id="doom-dots"></div>
+    </div>
+    
+    <div class="stats">
+        <div class="stat-row">
+            <span class="stat-label">Чтение за 30 дней</span>
+            <span class="stat-value" id="reading-30"></span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Контроль за 30 дней</span>
+            <span class="stat-value" id="doom-30"></span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Текущая серия</span>
+            <span class="stat-value" id="streak"></span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Всего дней</span>
+            <span class="stat-value" id="total"></span>
+        </div>
+    </div>
+    
+    <div class="year-view">
+        <div class="year-title">2026</div>
+        <div class="months" id="months"></div>
+    </div>
+
+    <script>
+        const MONTH_NAMES = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
+                             'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+        
+        let selectedDate = getTodayDate();
+
+        function getTodayDate() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+        
+        function getData() {
+            const stored = localStorage.getItem('habitData');
+            return stored ? JSON.parse(stored) : {};
+        }
+        
+        function saveData(data) {
+            localStorage.setItem('habitData', JSON.stringify(data));
+        }
+        
+        function toggle(type) {
+            const data = getData();
+            const dateKey = selectedDate;
+            
+            if (!data[dateKey]) data[dateKey] = {};
+            data[dateKey][type] = !data[dateKey][type];
+            
+            saveData(data);
+            render();
+        }
+
+        function resetToToday() {
+            selectedDate = getTodayDate();
+            render();
+        }
+        
+        function getDaysArray(count) {
+            const days = [];
+            for (let i = count - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                days.push(key);
+            }
+            return days;
+        }
+        
+        function renderDots() {
+            const data = getData();
+            const days = getDaysArray(30);
+            
+            const readingContainer = document.getElementById('reading-dots');
+            const doomContainer = document.getElementById('doom-dots');
+            
+            readingContainer.innerHTML = '';
+            doomContainer.innerHTML = '';
+            
+            days.forEach(day => {
+                const readingDot = document.createElement('div');
+                readingDot.className = 'dot';
+                if (data[day]?.reading) readingDot.classList.add('filled');
+                readingContainer.appendChild(readingDot);
+                
+                const doomDot = document.createElement('div');
+                doomDot.className = 'dot negative';
+                if (data[day]?.doom) doomDot.classList.add('filled');
+                doomContainer.appendChild(doomDot);
+            });
+        }
+        
+        function renderChecks() {
+            const data = getData();
+            const dateKey = selectedDate;
+            
+            const readingCheck = document.getElementById('reading-check');
+            const doomCheck = document.getElementById('doom-check');
+            
+            if (data[dateKey]?.reading) {
+                readingCheck.classList.add('active');
+            } else {
+                readingCheck.classList.remove('active');
+            }
+            
+            if (data[dateKey]?.doom) {
+                doomCheck.classList.add('active');
+            } else {
+                doomCheck.classList.remove('active');
+            }
+        }
+        
+        function renderStats() {
+            const data = getData();
+            const days = getDaysArray(30);
+            
+            let reading30 = 0;
+            let doom30 = 0;
+            
+            days.forEach(day => {
+                if (data[day]?.reading) reading30++;
+                if (data[day]?.doom) doom30++;
+            });
+            
+            let streak = 0;
+            const allDays = getDaysArray(365);
+            for (let day of allDays.reverse()) {
+                if (data[day]?.reading) {
+                    streak++;
+                } else {
+                    break;
+                }
+            }
+            
+            const total = Object.keys(data).length;
+            
+            document.getElementById('reading-30').textContent = `${reading30} дней`;
+            document.getElementById('doom-30').textContent = `${doom30} дней`;
+            document.getElementById('streak').textContent = `${streak} дней`;
+            document.getElementById('total').textContent = `${total} дней`;
+        }
+        
+        function renderYear() {
+            const data = getData();
+            const container = document.getElementById('months');
+            container.innerHTML = '';
+            
+            for (let m = 0; m < 12; m++) {
+                const monthDiv = document.createElement('div');
+                monthDiv.className = 'month';
+                
+                const monthName = document.createElement('div');
+                monthName.className = 'month-name';
+                monthName.textContent = MONTH_NAMES[m];
+                monthDiv.appendChild(monthName);
+                
+                const grid = document.createElement('div');
+                grid.className = 'days-grid';
+                
+                const daysInMonth = new Date(2026, m + 1, 0).getDate();
+                const firstDay = new Date(2026, m, 1).getDay();
+                const offset = firstDay === 0 ? 6 : firstDay - 1;
+                
+                for (let i = 0; i < offset; i++) {
+                    const empty = document.createElement('div');
+                    empty.className = 'day-cell';
+                    empty.style.opacity = '0';
+                    grid.appendChild(empty);
+                }
+                
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const key = `2026-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                    const cell = document.createElement('div');
+                    cell.className = 'day-cell';
+                    
+                    if (key === selectedDate) cell.classList.add('selected');
+
+                    const hasReading = data[key]?.reading;
+                    const hasDoom = data[key]?.doom;
+                    
+                    if (hasReading && hasDoom) {
+                        cell.classList.add('both');
+                    } else if (hasReading) {
+                        cell.classList.add('reading');
+                    } else if (hasDoom) {
+                        cell.classList.add('doom');
+                    }
+
+                    cell.onclick = (e) => {
+                        e.stopPropagation();
+                        selectedDate = key;
+                        render();
+                    };
+                    
+                    grid.appendChild(cell);
+                }
+                
+                monthDiv.appendChild(grid);
+                container.appendChild(monthDiv);
+            }
+        }
+        
+        function updateDate() {
+            const todayKey = getTodayDate();
+            const d = new Date();
+            const options = { weekday: 'long', day: 'numeric', month: 'long' };
+            
+            document.getElementById('today').textContent = 
+                d.toLocaleDateString('ru-RU', options).toUpperCase();
+
+            const titleEl = document.getElementById('page-title');
+            if (selectedDate === todayKey) {
+                titleEl.textContent = 'Сегодня';
+            } else {
+                titleEl.textContent = 'Выбрано: ' + selectedDate.split('-').reverse().join('.');
+            }
+        }
+        
+        function render() {
+            updateDate();
+            renderChecks();
+            renderDots();
+            renderStats();
+            renderYear();
+        }
+        
+        render();
+    </script>
+</body>
+</html>
