@@ -2,446 +2,941 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Reading</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Привычки</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             background: #000;
             color: #fff;
-            padding: 20px;
-            padding-top: 60px;
-            padding-bottom: 100px;
+            padding-bottom: 90px;
+            min-height: 100vh;
         }
-        
-        .date {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 8px;
+
+        /* TAB BAR */
+        .tab-bar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: rgba(14,14,14,0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid #1e1e1e;
+            display: flex;
+            z-index: 50;
+            padding-bottom: env(safe-area-inset-bottom, 0);
+        }
+
+        .tab {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 0 12px;
+            cursor: pointer;
+            gap: 3px;
+            color: #444;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            transition: color 0.15s;
+            text-transform: uppercase;
+        }
+
+        .tab.active { color: #fff; }
+        .tab-icon { font-size: 20px; line-height: 1; }
+
+        /* SCREENS */
+        .screen {
+            display: none;
+            padding: 56px 20px 20px;
+            animation: fadeIn 0.18s ease;
+        }
+
+        .screen.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* SHARED HEADER */
+        .screen-date {
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 6px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             cursor: pointer;
         }
-        
-        .title {
-            font-size: 32px;
+
+        .screen-title {
+            font-size: 30px;
             font-weight: 700;
-            margin-bottom: 40px;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-        
+
+        .nav-arrows { display: flex; gap: 4px; }
+
+        .nav-btn {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: #1a1a1a;
+            border: none; color: #fff;
+            font-size: 18px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+
+        .nav-btn:active { background: #2a2a2a; }
+
+        /* HABIT CARD */
         .habit {
             background: #111;
             border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 12px;
+            padding: 18px 20px;
+            margin-bottom: 10px;
             cursor: pointer;
             transition: background 0.15s;
         }
-        
-        .habit:active {
-            background: #1a1a1a;
-        }
-        
+
+        .habit:active { background: #161616; }
+
         .habit-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
-        
-        .habit-name {
-            font-size: 17px;
-            font-weight: 500;
-        }
-        
-        .check {
-            width: 24px;
-            height: 24px;
+
+        .habit-name { font-size: 17px; font-weight: 500; flex: 1; }
+
+        .habit-actions { display: flex; align-items: center; gap: 10px; }
+
+        .delete-btn {
+            width: 22px; height: 22px;
             border-radius: 50%;
-            border: 2px solid #333;
+            background: #1c1c1c;
+            border: none; color: #4a4a4a;
+            font-size: 12px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .delete-btn:hover { background: #2a1212; color: #ff453a; }
+
+        .check {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            border: 2px solid #2e2e2e;
             transition: all 0.2s;
+            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
         }
-        
+
         .check.active {
-            background: #0a84ff;
-            border-color: #0a84ff;
+            background: var(--habit-color, #0a84ff);
+            border-color: var(--habit-color, #0a84ff);
         }
-        
+
         .check.active::after {
             content: '✓';
-            display: flex;
-            align-items: center;
-            justify-content: center;
             color: #000;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
         }
-        
-        .dots {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-        }
-        
+
+        .dots { display: flex; gap: 4px; flex-wrap: wrap; }
+
         .dot {
-            width: 6px;
-            height: 6px;
-            background: #222;
+            width: 6px; height: 6px;
+            background: #1e1e1e;
             border-radius: 50%;
         }
-        
-        .dot.filled {
-            background: #0a84ff;
-        }
-        
-        .dot.negative {
-            background: #333;
-        }
-        
-        .dot.negative.filled {
-            background: #ff453a;
-        }
-        
-        .stats {
-            margin-top: 40px;
-            padding: 20px;
-            background: #111;
+
+        .dot.filled { background: var(--habit-color, #0a84ff); }
+
+        /* ADD BUTTON */
+        .add-habit-btn {
+            background: #0d0d0d;
+            border: 1.5px dashed #252525;
             border-radius: 16px;
-        }
-        
-        .stat-row {
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
             display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            font-size: 15px;
+            align-items: center;
+            gap: 12px;
+            color: #3a3a3a;
+            font-size: 16px;
+            width: 100%;
+            font-family: inherit;
         }
-        
-        .stat-label {
-            color: #666;
-        }
-        
-        .stat-value {
-            font-weight: 600;
-        }
-        
-        .year-view {
-            margin-top: 40px;
-        }
-        
-        .year-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-        
-        .months {
+
+        .add-habit-btn:hover { border-color: #333; color: #555; }
+
+        /* WEEK */
+        .week-days-row {
             display: grid;
-            gap: 16px;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            margin-bottom: 22px;
         }
-        
-        .month {
+
+        .week-day {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .week-day-label { font-size: 10px; color: #444; text-transform: uppercase; }
+
+        .week-day-num {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .week-day-num.today { background: #1e1e1e; }
+        .week-day-num.selected { background: #fff; color: #000; }
+
+        .week-habit-row {
             background: #111;
-            border-radius: 12px;
-            padding: 16px;
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin-bottom: 10px;
         }
-        
-        .month-name {
-            font-size: 13px;
-            color: #666;
+
+        .week-habit-name {
+            font-size: 15px; font-weight: 500;
             margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 8px;
         }
-        
-        .days-grid {
+
+        .week-dots {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .week-dot {
+            aspect-ratio: 1;
+            border-radius: 6px;
+            background: #1a1a1a;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .week-dot.filled { background: var(--habit-color, #0a84ff); }
+        .week-dot.today-col { box-shadow: inset 0 0 0 1px #2a2a2a; }
+
+        /* MONTH */
+        .month-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 6px;
+        }
+
+        .month-weekday-cell {
+            text-align: center;
+            font-size: 11px; color: #3a3a3a;
+            text-transform: uppercase;
+            padding: 4px 0;
+        }
+
+        .month-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 3px;
+            margin-bottom: 20px;
         }
-        
-        .day-cell {
+
+        .month-cell {
             aspect-ratio: 1;
-            border-radius: 3px;
-            background: #1a1a1a;
+            border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; color: #777;
+            background: #0e0e0e;
+            cursor: pointer;
+            transition: all 0.15s;
+            position: relative; overflow: hidden;
+        }
+
+        .month-cell.empty { background: transparent; cursor: default; }
+        .month-cell.today { color: #fff; font-weight: 700; }
+        .month-cell.selected { outline: 2px solid #fff; outline-offset: -2px; }
+        .month-cell-bg { position: absolute; inset: 0; }
+        .month-cell-num { position: relative; z-index: 1; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
+
+        .month-detail-card {
+            background: #111;
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin-bottom: 10px;
+        }
+
+        .month-detail-date { font-size: 13px; color: #444; margin-bottom: 14px; }
+
+        .month-habit-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
             cursor: pointer;
         }
 
-        .day-cell.selected {
-            outline: 2px solid #fff;
-            outline-offset: -2px;
+        .month-habit-label { display: flex; align-items: center; gap: 10px; font-size: 16px; }
+
+        .color-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+        /* YEAR */
+        .year-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
-        
-        .day-cell.reading {
+
+        .year-month-card {
+            background: #0e0e0e;
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .year-month-name {
+            font-size: 11px; color: #444;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 8px;
+        }
+
+        .year-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+
+        .year-cell {
+            aspect-ratio: 1;
+            border-radius: 2px;
+            background: #181818;
+            cursor: pointer;
+            transition: opacity 0.1s;
+        }
+
+        .year-cell.selected { outline: 1.5px solid #fff; outline-offset: -1.5px; }
+        .year-cell.today-cell { outline: 1.5px solid #444; outline-offset: -1.5px; }
+
+        /* STATS */
+        .stats-block {
+            background: #111;
+            border-radius: 16px;
+            padding: 2px 20px;
+            margin-top: 24px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 13px 0;
+            font-size: 15px;
+            border-bottom: 1px solid #161616;
+        }
+
+        .stat-row:last-child { border-bottom: none; }
+        .stat-label { color: #555; display: flex; align-items: center; gap: 8px; }
+        .stat-value { font-weight: 600; }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.82);
+            display: flex; align-items: flex-end;
+            z-index: 100;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+        .modal {
+            background: #1a1a1a;
+            border-radius: 24px 24px 0 0;
+            padding: 20px 24px calc(40px + env(safe-area-inset-bottom, 0));
+            width: 100%;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+
+        .modal-overlay.open .modal { transform: translateY(0); }
+
+        .modal-handle {
+            width: 36px; height: 4px;
+            background: #333; border-radius: 2px;
+            margin: 0 auto 22px;
+        }
+
+        .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 22px; }
+
+        .modal-label {
+            font-size: 12px; color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .modal-input {
+            background: #242424;
+            border: none; border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 17px; color: #fff;
+            width: 100%; outline: none;
+            margin-bottom: 22px;
+            font-family: inherit;
+        }
+
+        .modal-input::placeholder { color: #3a3a3a; }
+
+        .color-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 26px; }
+
+        .color-swatch {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.15s;
+        }
+
+        .color-swatch.selected { border-color: #fff; transform: scale(1.12); }
+
+        .color-swatch.custom {
+            background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+            position: relative; overflow: hidden;
+        }
+
+        .color-swatch.custom input {
+            position: absolute; inset: 0;
+            opacity: 0; cursor: pointer;
+            width: 100%; height: 100%;
+        }
+
+        .modal-btn {
             background: #0a84ff;
+            color: #fff; border: none;
+            border-radius: 14px; padding: 16px;
+            font-size: 17px; font-weight: 600;
+            width: 100%; cursor: pointer;
+            font-family: inherit;
         }
-        
-        .day-cell.doom {
-            background: #ff453a;
+
+        .modal-btn:active { opacity: 0.8; }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #2e2e2e;
+            font-size: 15px;
         }
-        
-        .day-cell.both {
-            background: linear-gradient(135deg, #0a84ff 50%, #ff453a 50%);
-        }
+
+        .empty-icon { font-size: 36px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
-    <div class="date" id="today" onclick="resetToToday()"></div>
-    <div class="title" id="page-title">Сегодня</div>
-    
-    <div class="habit" onclick="toggle('reading')">
-        <div class="habit-header">
-            <div class="habit-name">Чтение</div>
-            <div class="check" id="reading-check"></div>
+
+    <!-- SCREEN: DAY -->
+    <div class="screen active" id="screen-day">
+        <div class="screen-date" id="day-date" onclick="resetToToday()"></div>
+        <div class="screen-title">
+            <span id="day-title">Сегодня</span>
+            <div class="nav-arrows">
+                <button class="nav-btn" onclick="shiftDay(-1)">‹</button>
+                <button class="nav-btn" onclick="shiftDay(1)">›</button>
+            </div>
         </div>
-        <div class="dots" id="reading-dots"></div>
-    </div>
-    
-    <div class="habit" onclick="toggle('doom')">
-        <div class="habit-header">
-            <div class="habit-name">Думскроллинг</div>
-            <div class="check negative" id="doom-check"></div>
-        </div>
-        <div class="dots" id="doom-dots"></div>
-    </div>
-    
-    <div class="stats">
-        <div class="stat-row">
-            <span class="stat-label">Чтение за 30 дней</span>
-            <span class="stat-value" id="reading-30"></span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">Контроль за 30 дней</span>
-            <span class="stat-value" id="doom-30"></span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">Текущая серия</span>
-            <span class="stat-value" id="streak"></span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">Всего дней</span>
-            <span class="stat-value" id="total"></span>
-        </div>
-    </div>
-    
-    <div class="year-view">
-        <div class="year-title">2026</div>
-        <div class="months" id="months"></div>
+        <div id="day-habits"></div>
+        <button class="add-habit-btn" onclick="openModal()">
+            <span style="font-size:20px">+</span> Добавить привычку
+        </button>
+        <div class="stats-block" id="day-stats"></div>
     </div>
 
-    <script>
-        const MONTH_NAMES = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
-                             'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-        
-        let selectedDate = getTodayDate();
+    <!-- SCREEN: WEEK -->
+    <div class="screen" id="screen-week">
+        <div class="screen-date" onclick="resetToToday()" style="cursor:pointer">Нажмите чтобы сегодня</div>
+        <div class="screen-title">
+            <span id="week-title">Неделя</span>
+            <div class="nav-arrows">
+                <button class="nav-btn" onclick="shiftWeek(-1)">‹</button>
+                <button class="nav-btn" onclick="shiftWeek(1)">›</button>
+            </div>
+        </div>
+        <div class="week-days-row" id="week-days-row"></div>
+        <div id="week-habits"></div>
+    </div>
 
-        function getTodayDate() {
-            const d = new Date();
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        }
-        
-        function getData() {
-            const stored = localStorage.getItem('habitData');
-            return stored ? JSON.parse(stored) : {};
-        }
-        
-        function saveData(data) {
-            localStorage.setItem('habitData', JSON.stringify(data));
-        }
-        
-        function toggle(type) {
-            const data = getData();
-            const dateKey = selectedDate;
-            
-            if (!data[dateKey]) data[dateKey] = {};
-            data[dateKey][type] = !data[dateKey][type];
-            
-            saveData(data);
-            render();
+    <!-- SCREEN: MONTH -->
+    <div class="screen" id="screen-month">
+        <div class="screen-date" onclick="resetToToday()" style="cursor:pointer">Нажмите чтобы сегодня</div>
+        <div class="screen-title">
+            <span id="month-title"></span>
+            <div class="nav-arrows">
+                <button class="nav-btn" onclick="shiftMonth(-1)">‹</button>
+                <button class="nav-btn" onclick="shiftMonth(1)">›</button>
+            </div>
+        </div>
+        <div class="month-weekdays" id="month-weekdays"></div>
+        <div class="month-grid" id="month-grid"></div>
+        <div id="month-detail"></div>
+    </div>
+
+    <!-- SCREEN: YEAR -->
+    <div class="screen" id="screen-year">
+        <div class="screen-date" onclick="resetToToday()" style="cursor:pointer">Нажмите чтобы сегодня</div>
+        <div class="screen-title">
+            <span id="year-title"></span>
+            <div class="nav-arrows">
+                <button class="nav-btn" onclick="shiftYear(-1)">‹</button>
+                <button class="nav-btn" onclick="shiftYear(1)">›</button>
+            </div>
+        </div>
+        <div class="year-grid" id="year-grid"></div>
+    </div>
+
+    <!-- TAB BAR -->
+    <div class="tab-bar">
+        <div class="tab active" data-screen="day" onclick="switchTab('day')">
+            <span class="tab-icon">☀️</span>
+            <span>День</span>
+        </div>
+        <div class="tab" data-screen="week" onclick="switchTab('week')">
+            <span class="tab-icon">📅</span>
+            <span>Неделя</span>
+        </div>
+        <div class="tab" data-screen="month" onclick="switchTab('month')">
+            <span class="tab-icon">🗓</span>
+            <span>Месяц</span>
+        </div>
+        <div class="tab" data-screen="year" onclick="switchTab('year')">
+            <span class="tab-icon">📊</span>
+            <span>Год</span>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-title">Новая привычка</div>
+            <div class="modal-label">Название</div>
+            <input class="modal-input" id="habit-name-input" placeholder="Например, Медитация" maxlength="40">
+            <div class="modal-label">Цвет</div>
+            <div class="color-grid" id="color-grid"></div>
+            <button class="modal-btn" onclick="saveHabit()">Добавить</button>
+        </div>
+    </div>
+
+<script>
+    const MONTH_NAMES     = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    const MONTH_NAMES_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+    const DAY_LABELS      = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+    const PRESET_COLORS   = ['#0a84ff','#30d158','#ff9f0a','#ff453a','#bf5af2','#ff375f','#64d2ff','#ffd60a','#ac8e68','#98989e'];
+
+    let currentTab   = 'day';
+    let selectedDate = todayKey();
+    let weekOffset   = 0;
+    let monthOffset  = 0;
+    let yearOffset   = 0;
+    let selectedColor = PRESET_COLORS[0];
+
+    // ── UTILS ──────────────────────────────────────────
+    function todayKey() {
+        const d = new Date();
+        return fmtKey(d);
+    }
+
+    function fmtKey(d) {
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    }
+
+    function pad(n) { return String(n).padStart(2,'0'); }
+
+    function parseKey(k) {
+        const [y,m,d] = k.split('-').map(Number);
+        return new Date(y, m-1, d, 12);
+    }
+
+    function getData() {
+        try { return JSON.parse(localStorage.getItem('habitData_v2')) || {habits:[],log:{}}; }
+        catch(e) { return {habits:[],log:{}}; }
+    }
+
+    function saveData(d) { localStorage.setItem('habitData_v2', JSON.stringify(d)); }
+
+    function dayBg(data, key) {
+        const log = data.log[key] || {};
+        const active = data.habits.filter(h => log[h.id]);
+        if (!active.length) return null;
+        if (active.length === 1) return active[0].color;
+        const step = 100 / active.length;
+        return `linear-gradient(135deg,${active.map((h,i)=>`${h.color} ${i*step}% ${(i+1)*step}%`).join(',')})`;
+    }
+
+    // ── ACTIONS ────────────────────────────────────────
+    function toggle(habitId, dateKey) {
+        const data = getData();
+        if (!data.log[dateKey]) data.log[dateKey] = {};
+        data.log[dateKey][habitId] = !data.log[dateKey][habitId];
+        saveData(data);
+        renderAll();
+    }
+
+    function deleteHabit(habitId, e) {
+        e.stopPropagation();
+        if (!confirm('Удалить эту привычку? История будет удалена.')) return;
+        const data = getData();
+        data.habits = data.habits.filter(h => h.id !== habitId);
+        for (const d in data.log) delete data.log[d][habitId];
+        saveData(data);
+        renderAll();
+    }
+
+    function shiftDay(n) {
+        const d = parseKey(selectedDate);
+        d.setDate(d.getDate() + n);
+        selectedDate = fmtKey(d);
+        renderAll();
+    }
+
+    function shiftWeek(n)  { weekOffset  += n; renderAll(); }
+    function shiftMonth(n) { monthOffset += n; renderAll(); }
+    function shiftYear(n)  { yearOffset  += n; renderAll(); }
+
+    function resetToToday() {
+        selectedDate = todayKey();
+        weekOffset = monthOffset = yearOffset = 0;
+        renderAll();
+    }
+
+    // ── TAB ────────────────────────────────────────────
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.screen === tab));
+        document.getElementById('screen-' + tab).classList.add('active');
+        renderAll();
+    }
+
+    // ── WEEK HELPERS ───────────────────────────────────
+    function getWeekDates(offset) {
+        const today = new Date();
+        const dow = today.getDay();
+        const mon = new Date(today);
+        mon.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1) + offset * 7);
+        return Array.from({length:7}, (_,i) => {
+            const d = new Date(mon); d.setDate(mon.getDate()+i); return fmtKey(d);
+        });
+    }
+
+    // ── RENDER: DAY ────────────────────────────────────
+    function renderDay() {
+        const data = getData();
+        const today = todayKey();
+
+        const d = parseKey(selectedDate);
+        document.getElementById('day-date').textContent =
+            d.toLocaleDateString('ru-RU', {weekday:'long',day:'numeric',month:'long'}).toUpperCase();
+        document.getElementById('day-title').textContent =
+            selectedDate === today ? 'Сегодня' : `${d.getDate()} ${MONTH_NAMES_GEN[d.getMonth()]}`;
+
+        const container = document.getElementById('day-habits');
+        container.innerHTML = '';
+
+        if (!data.habits.length) {
+            container.innerHTML = '<div class="empty-state"><div class="empty-icon">🌱</div>Добавьте первую привычку</div>';
         }
 
-        function resetToToday() {
-            selectedDate = getTodayDate();
-            render();
-        }
-        
-        function getDaysArray(count) {
-            const days = [];
-            for (let i = count - 1; i >= 0; i--) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                days.push(key);
-            }
-            return days;
-        }
-        
-        function renderDots() {
-            const data = getData();
-            const days = getDaysArray(30);
-            
-            const readingContainer = document.getElementById('reading-dots');
-            const doomContainer = document.getElementById('doom-dots');
-            
-            readingContainer.innerHTML = '';
-            doomContainer.innerHTML = '';
-            
-            days.forEach(day => {
-                const readingDot = document.createElement('div');
-                readingDot.className = 'dot';
-                if (data[day]?.reading) readingDot.classList.add('filled');
-                readingContainer.appendChild(readingDot);
-                
-                const doomDot = document.createElement('div');
-                doomDot.className = 'dot negative';
-                if (data[day]?.doom) doomDot.classList.add('filled');
-                doomContainer.appendChild(doomDot);
+        data.habits.forEach(h => {
+            const days30 = Array.from({length:30}, (_,i) => {
+                const dt = parseKey(selectedDate); dt.setDate(dt.getDate() - (29-i)); return fmtKey(dt);
             });
-        }
-        
-        function renderChecks() {
-            const data = getData();
-            const dateKey = selectedDate;
-            
-            const readingCheck = document.getElementById('reading-check');
-            const doomCheck = document.getElementById('doom-check');
-            
-            if (data[dateKey]?.reading) {
-                readingCheck.classList.add('active');
-            } else {
-                readingCheck.classList.remove('active');
-            }
-            
-            if (data[dateKey]?.doom) {
-                doomCheck.classList.add('active');
-            } else {
-                doomCheck.classList.remove('active');
-            }
-        }
-        
-        function renderStats() {
-            const data = getData();
-            const days = getDaysArray(30);
-            
-            let reading30 = 0;
-            let doom30 = 0;
-            
-            days.forEach(day => {
-                if (data[day]?.reading) reading30++;
-                if (data[day]?.doom) doom30++;
-            });
-            
+            const isActive = !!data.log[selectedDate]?.[h.id];
+
+            const div = document.createElement('div');
+            div.className = 'habit';
+            div.style.setProperty('--habit-color', h.color);
+            div.onclick = () => toggle(h.id, selectedDate);
+            div.innerHTML = `
+                <div class="habit-header">
+                    <div class="habit-name">${h.name}</div>
+                    <div class="habit-actions">
+                        <button class="delete-btn" onclick="deleteHabit('${h.id}',event)">✕</button>
+                        <div class="check${isActive?' active':''}"></div>
+                    </div>
+                </div>
+                <div class="dots">${days30.map(k=>`<div class="dot${data.log[k]?.[h.id]?' filled':''}"></div>`).join('')}</div>`;
+            container.appendChild(div);
+        });
+
+        // stats
+        const days30  = Array.from({length:30},  (_,i)=>{ const d=new Date(); d.setDate(d.getDate()-(29-i));  return fmtKey(d); });
+        const days365 = Array.from({length:365}, (_,i)=>{ const d=new Date(); d.setDate(d.getDate()-(364-i)); return fmtKey(d); });
+
+        let statsHtml = '';
+        data.habits.forEach(h => {
+            const cnt30 = days30.filter(k => data.log[k]?.[h.id]).length;
             let streak = 0;
-            const allDays = getDaysArray(365);
-            for (let day of allDays.reverse()) {
-                if (data[day]?.reading) {
-                    streak++;
-                } else {
-                    break;
-                }
+            for (let i = days365.length-1; i >= 0; i--) {
+                if (data.log[days365[i]]?.[h.id]) streak++; else break;
             }
-            
-            const total = Object.keys(data).length;
-            
-            document.getElementById('reading-30').textContent = `${reading30} дней`;
-            document.getElementById('doom-30').textContent = `${doom30} дней`;
-            document.getElementById('streak').textContent = `${streak} дней`;
-            document.getElementById('total').textContent = `${total} дней`;
+            statsHtml += `
+                <div class="stat-row">
+                    <span class="stat-label"><span class="color-dot" style="background:${h.color}"></span>${h.name} · 30 дн</span>
+                    <span class="stat-value">${cnt30}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label"><span class="color-dot" style="background:${h.color}"></span>${h.name} · серия</span>
+                    <span class="stat-value">${streak} дн</span>
+                </div>`;
+        });
+        const allDays = Object.keys(data.log).filter(k => Object.values(data.log[k]).some(v=>v)).length;
+        statsHtml += `<div class="stat-row"><span class="stat-label">Всего дней</span><span class="stat-value">${allDays}</span></div>`;
+        document.getElementById('day-stats').innerHTML = statsHtml;
+    }
+
+    // ── RENDER: WEEK ───────────────────────────────────
+    function renderWeek() {
+        const data = getData();
+        const today = todayKey();
+        const dates = getWeekDates(weekOffset);
+        const s = parseKey(dates[0]), e = parseKey(dates[6]);
+
+        document.getElementById('week-title').textContent =
+            s.getMonth() === e.getMonth()
+                ? `${s.getDate()}–${e.getDate()} ${MONTH_NAMES_GEN[s.getMonth()]} ${s.getFullYear()}`
+                : `${s.getDate()} ${MONTH_NAMES_GEN[s.getMonth()]} – ${e.getDate()} ${MONTH_NAMES_GEN[e.getMonth()]}`;
+
+        document.getElementById('week-days-row').innerHTML = dates.map((key,i) => {
+            const d = parseKey(key);
+            const isSel = key === selectedDate, isTod = key === today;
+            return `<div class="week-day">
+                <div class="week-day-label">${DAY_LABELS[i]}</div>
+                <div class="week-day-num ${isSel?'selected':isTod?'today':''}" onclick="selectedDate='${key}';renderAll()">${d.getDate()}</div>
+            </div>`;
+        }).join('');
+
+        const container = document.getElementById('week-habits');
+        container.innerHTML = '';
+
+        if (!data.habits.length) {
+            container.innerHTML = '<div class="empty-state"><div class="empty-icon">🌱</div>Добавьте привычки на экране «День»</div>';
+            return;
         }
-        
-        function renderYear() {
-            const data = getData();
-            const container = document.getElementById('months');
-            container.innerHTML = '';
-            
-            for (let m = 0; m < 12; m++) {
-                const monthDiv = document.createElement('div');
-                monthDiv.className = 'month';
-                
-                const monthName = document.createElement('div');
-                monthName.className = 'month-name';
-                monthName.textContent = MONTH_NAMES[m];
-                monthDiv.appendChild(monthName);
-                
-                const grid = document.createElement('div');
-                grid.className = 'days-grid';
-                
-                const daysInMonth = new Date(2026, m + 1, 0).getDate();
-                const firstDay = new Date(2026, m, 1).getDay();
-                const offset = firstDay === 0 ? 6 : firstDay - 1;
-                
-                for (let i = 0; i < offset; i++) {
-                    const empty = document.createElement('div');
-                    empty.className = 'day-cell';
-                    empty.style.opacity = '0';
-                    grid.appendChild(empty);
-                }
-                
-                for (let d = 1; d <= daysInMonth; d++) {
-                    const key = `2026-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                    const cell = document.createElement('div');
-                    cell.className = 'day-cell';
-                    
-                    if (key === selectedDate) cell.classList.add('selected');
 
-                    const hasReading = data[key]?.reading;
-                    const hasDoom = data[key]?.doom;
-                    
-                    if (hasReading && hasDoom) {
-                        cell.classList.add('both');
-                    } else if (hasReading) {
-                        cell.classList.add('reading');
-                    } else if (hasDoom) {
-                        cell.classList.add('doom');
-                    }
+        data.habits.forEach(h => {
+            const div = document.createElement('div');
+            div.className = 'week-habit-row';
+            div.style.setProperty('--habit-color', h.color);
+            div.innerHTML = `
+                <div class="week-habit-name">
+                    <span class="color-dot" style="background:${h.color}"></span>${h.name}
+                </div>
+                <div class="week-dots">${dates.map(key => `
+                    <div class="week-dot${data.log[key]?.[h.id]?' filled':''} ${key===today?'today-col':''}"
+                         onclick="toggle('${h.id}','${key}')"></div>`).join('')}
+                </div>`;
+            container.appendChild(div);
+        });
+    }
 
-                    cell.onclick = (e) => {
-                        e.stopPropagation();
-                        selectedDate = key;
-                        render();
-                    };
-                    
-                    grid.appendChild(cell);
-                }
-                
-                monthDiv.appendChild(grid);
-                container.appendChild(monthDiv);
+    // ── RENDER: MONTH ──────────────────────────────────
+    function renderMonth() {
+        const data = getData();
+        const today = todayKey();
+        const now = new Date();
+        const target = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+        const year = target.getFullYear(), month = target.getMonth();
+
+        document.getElementById('month-title').textContent = `${MONTH_NAMES[month]} ${year}`;
+
+        document.getElementById('month-weekdays').innerHTML =
+            DAY_LABELS.map(l => `<div class="month-weekday-cell">${l}</div>`).join('');
+
+        const daysInMonth = new Date(year, month+1, 0).getDate();
+        const firstDow = new Date(year, month, 1).getDay();
+        const offset = firstDow === 0 ? 6 : firstDow - 1;
+
+        const grid = document.getElementById('month-grid');
+        grid.innerHTML = '';
+
+        for (let i = 0; i < offset; i++) {
+            const el = document.createElement('div');
+            el.className = 'month-cell empty';
+            grid.appendChild(el);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const key = `${year}-${pad(month+1)}-${pad(d)}`;
+            const cell = document.createElement('div');
+            cell.className = `month-cell${key===today?' today':''}${key===selectedDate?' selected':''}`;
+
+            const bg = dayBg(data, key);
+            if (bg) {
+                const bgEl = document.createElement('div');
+                bgEl.className = 'month-cell-bg';
+                bgEl.style.cssText = bg.startsWith('linear') ? `background:${bg};opacity:.7` : `background:${bg};opacity:.55`;
+                cell.appendChild(bgEl);
             }
-        }
-        
-        function updateDate() {
-            const todayKey = getTodayDate();
-            const d = new Date();
-            const options = { weekday: 'long', day: 'numeric', month: 'long' };
-            
-            document.getElementById('today').textContent = 
-                d.toLocaleDateString('ru-RU', options).toUpperCase();
 
-            const titleEl = document.getElementById('page-title');
-            if (selectedDate === todayKey) {
-                titleEl.textContent = 'Сегодня';
-            } else {
-                titleEl.textContent = 'Выбрано: ' + selectedDate.split('-').reverse().join('.');
+            const num = document.createElement('div');
+            num.className = 'month-cell-num';
+            num.textContent = d;
+            cell.appendChild(num);
+            cell.onclick = () => { selectedDate = key; renderAll(); };
+            grid.appendChild(cell);
+        }
+
+        // detail panel for selected day in current month
+        const detEl = document.getElementById('month-detail');
+        const sd = parseKey(selectedDate);
+        if (sd.getFullYear() === year && sd.getMonth() === month && data.habits.length) {
+            let html = `<div class="month-detail-card">
+                <div class="month-detail-date">${sd.getDate()} ${MONTH_NAMES_GEN[sd.getMonth()]} ${sd.getFullYear()}</div>
+                <div>`;
+            data.habits.forEach(h => {
+                const active = !!data.log[selectedDate]?.[h.id];
+                html += `<div class="month-habit-item" onclick="toggle('${h.id}','${selectedDate}')">
+                    <div class="month-habit-label">
+                        <span class="color-dot" style="background:${h.color}"></span>${h.name}
+                    </div>
+                    <div class="check${active?' active':''}" style="--habit-color:${h.color}"></div>
+                </div>`;
+            });
+            html += '</div></div>';
+            detEl.innerHTML = html;
+        } else {
+            detEl.innerHTML = '';
+        }
+    }
+
+    // ── RENDER: YEAR ───────────────────────────────────
+    function renderYear() {
+        const data = getData();
+        const today = todayKey();
+        const year = new Date().getFullYear() + yearOffset;
+        document.getElementById('year-title').textContent = year;
+
+        const grid = document.getElementById('year-grid');
+        grid.innerHTML = '';
+
+        for (let m = 0; m < 12; m++) {
+            const card = document.createElement('div');
+            card.className = 'year-month-card';
+
+            const name = document.createElement('div');
+            name.className = 'year-month-name';
+            name.textContent = MONTH_NAMES[m];
+            card.appendChild(name);
+
+            const daysGrid = document.createElement('div');
+            daysGrid.className = 'year-days';
+
+            const daysInMonth = new Date(year, m+1, 0).getDate();
+            const firstDow = new Date(year, m, 1).getDay();
+            const off = firstDow === 0 ? 6 : firstDow - 1;
+
+            for (let i = 0; i < off; i++) {
+                const e = document.createElement('div');
+                e.className = 'year-cell'; e.style.opacity = '0';
+                daysGrid.appendChild(e);
             }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const key = `${year}-${pad(m+1)}-${pad(d)}`;
+                const cell = document.createElement('div');
+                cell.className = `year-cell${key===selectedDate?' selected':''}${key===today?' today-cell':''}`;
+
+                const bg = dayBg(data, key);
+                if (bg) cell.style.background = bg;
+
+                cell.onclick = () => { selectedDate = key; renderAll(); };
+                daysGrid.appendChild(cell);
+            }
+
+            card.appendChild(daysGrid);
+            grid.appendChild(card);
         }
-        
-        function render() {
-            updateDate();
-            renderChecks();
-            renderDots();
-            renderStats();
-            renderYear();
-        }
-        
-        render();
-    </script>
+    }
+
+    // ── MASTER RENDER ──────────────────────────────────
+    function renderAll() {
+        renderDay();
+        renderWeek();
+        renderMonth();
+        renderYear();
+    }
+
+    // ── MODAL ──────────────────────────────────────────
+    function openModal() {
+        document.getElementById('habit-name-input').value = '';
+        selectedColor = PRESET_COLORS[0];
+        buildColorGrid();
+        document.getElementById('modal-overlay').classList.add('open');
+        setTimeout(() => document.getElementById('habit-name-input').focus(), 300);
+    }
+
+    function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+    function handleOverlayClick(e) {
+        if (e.target === document.getElementById('modal-overlay')) closeModal();
+    }
+
+    function buildColorGrid() {
+        const grid = document.getElementById('color-grid');
+        grid.innerHTML = '';
+        PRESET_COLORS.forEach(c => {
+            const s = document.createElement('div');
+            s.className = `color-swatch${c===selectedColor?' selected':''}`;
+            s.style.background = c;
+            s.onclick = () => { selectedColor = c; buildColorGrid(); };
+            grid.appendChild(s);
+        });
+        const custom = document.createElement('div');
+        custom.className = `color-swatch custom${!PRESET_COLORS.includes(selectedColor)?' selected':''}`;
+        const inp = document.createElement('input');
+        inp.type = 'color'; inp.value = selectedColor;
+        inp.oninput = e => { selectedColor = e.target.value; buildColorGrid(); };
+        custom.appendChild(inp);
+        grid.appendChild(custom);
+    }
+
+    function saveHabit() {
+        const name = document.getElementById('habit-name-input').value.trim();
+        if (!name) return;
+        const data = getData();
+        data.habits.push({ id: 'h_' + Date.now(), name, color: selectedColor });
+        saveData(data);
+        closeModal();
+        renderAll();
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && document.getElementById('modal-overlay').classList.contains('open')) saveHabit();
+        if (e.key === 'Escape') closeModal();
+    });
+
+    renderAll();
+</script>
 </body>
 </html>
